@@ -15,6 +15,22 @@ services:
     networks:
       - postgres
 
+  postgres-fraud:
+    image: postgres
+    container_name: postgres-fraud
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user
+      POSTGRES_DB: fraud
+      PGDATA: /data/postgres
+    volumes:
+      - postgres-fraud:/data/postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - postgres
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
@@ -37,4 +53,5 @@ networks:
 
 volumes:
   postgres:
+  postgres-fraud:
   pgadmin:
