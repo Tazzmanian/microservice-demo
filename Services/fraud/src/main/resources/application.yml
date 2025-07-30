@@ -16,3 +16,21 @@ spring:
     username: user
     password: pass
 #    driver-class-name: org.postgresql.Driver
+
+logging:
+  level:
+    brave: DEBUG
+    io:
+      micrometer:
+        tracing: DEBUG
+
+management:
+  tracing:
+    exporter:
+      zipkin:
+        enabled: true
+        endpoint: http://localhost:9411/api/v2/spans
+    sampling:
+      probability: 1.0
+#  zipkin:
+#    endpoint: http://localhost:9411/api/v2/spans
