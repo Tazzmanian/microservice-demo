@@ -2,6 +2,7 @@ package org.services;
 
 import brave.Tracing;
 import brave.kafka.clients.KafkaTracing;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +36,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, String> producerFactory(KafkaTracing kafkaTracing) {
+    public ProducerFactory<String, String> producerFactory(KafkaTracing kafkaTracing, MeterRegistry meterRegistry) {
         var pf = new DefaultKafkaProducerFactory<String, String>(producerConfig());
         pf.addPostProcessor(kafkaTracing::producer);
         return pf;

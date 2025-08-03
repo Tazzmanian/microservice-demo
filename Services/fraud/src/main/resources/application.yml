@@ -18,6 +18,8 @@ spring:
 #    driver-class-name: org.postgresql.Driver
   kafka:
     bootstrap-servers: localhost:9092
+    properties:
+      client.id: fraud-service
 
 logging:
   level:

@@ -1,5 +1,9 @@
 package org.services.config;
 
+import brave.Tracing;
+import brave.kafka.clients.KafkaTracing;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@RequiredArgsConstructor
 public class KafkaConsumerConfig {
+
+//    private final MeterRegistry meterRegistry;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -23,15 +30,24 @@ public class KafkaConsumerConfig {
     public Map<String, Object> consumerConfig() {
         var props = new HashMap<String, Object>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "notification-service");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         return props;
     }
 
     @Bean
-    public ConsumerFactory<String, String> consumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(consumerConfig());
+    public KafkaTracing kafkaTracing(Tracing tracing) {
+        return KafkaTracing.create(tracing);
+    }
+
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory(KafkaTracing kafkaTracing, MeterRegistry meterRegistry) {
+        var cf = new DefaultKafkaConsumerFactory<String, String>(consumerConfig());
+        cf.addPostProcessor(kafkaTracing::consumer);
+        return cf;
     }
 
     @Bean
@@ -39,6 +55,7 @@ public class KafkaConsumerConfig {
                     factory(ConsumerFactory<String, String> consumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setObservationEnabled(true);
 
         return factory;
     }
