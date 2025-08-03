@@ -1,12 +1,14 @@
 package org.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @Slf4j
-public record CustomerService(CustomerRepository customerRepository, RestTemplate restTemplate) {
+public record CustomerService(CustomerRepository customerRepository, RestTemplate restTemplate,
+                              KafkaTemplate<String, String> kafkaTemplate) {
     public void registerCustomer(CustomerRequest customerRequest) {
         Customer customer = Customer.builder()
                 .email(customerRequest.email())
@@ -22,6 +24,8 @@ public record CustomerService(CustomerRepository customerRepository, RestTemplat
         if (resp.isFraudulent()) {
             throw new RuntimeException("fraudulent");
         }
+
+        kafkaTemplate.send("custom", customer.toString());
 
         log.info("customer registered: {}", customer);
     }
